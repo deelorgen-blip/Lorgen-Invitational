@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --cream: #FAF6EE;
+    --navy: #0F1624;
+    --gold: #C9A84C;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #FAF6EE;
+    color: #0F1624;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+@layer components {
+  /* Badge / pill label */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gold/30 bg-gold/10 text-gold text-xs font-medium tracking-widest uppercase;
+  }
+
+  /* Primary gold button */
+  .btn-gold {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gold text-navy font-semibold text-sm tracking-wide hover:bg-gold-dark transition-colors;
+  }
+
+  /* Outlined gold button */
+  .btn-outline {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gold text-gold font-semibold text-sm tracking-wide hover:bg-gold/10 transition-colors;
+  }
+
+  /* Section heading */
+  .section-title {
+    @apply font-serif text-3xl md:text-4xl font-bold text-navy;
+  }
+
+  /* Info card */
+  .info-card {
+    @apply bg-cream border border-gold/20 rounded-lg p-5 text-center;
+  }
+
+  /* Table header */
+  .table-header {
+    @apply bg-navy text-gold text-xs font-semibold tracking-widest uppercase px-4 py-3;
+  }
+
+  /* Scorecell */
+  .score-eagle {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold;
+  }
+  .score-birdie {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-500 text-white text-xs font-bold;
+  }
+  .score-par {
+    @apply inline-flex items-center justify-center w-7 h-7 text-gray-500 text-sm;
+  }
+  .score-bogey {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full bg-yellow-400 text-navy text-xs font-bold;
+  }
+  .score-double {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-gray-700 text-xs font-bold;
+  }
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF6EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9A84C;
+  border-radius: 3px;
+}
+
+/* Birdie overlay animation */
+@keyframes birdieIn {
+  0% { opacity: 0; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes birdieOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+
+.birdie-overlay-in {
+  animation: birdieIn 0.4s ease-out forwards;
+}
+
+.birdie-overlay-out {
+  animation: birdieOut 0.3s ease-in forwards;
+}

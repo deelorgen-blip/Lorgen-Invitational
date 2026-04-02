@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Laurel left -->
+  <g fill="#C9A84C">
+    <ellipse cx="28" cy="100" rx="7" ry="14" transform="rotate(-30 28 100)"/>
+    <ellipse cx="22" cy="80" rx="6" ry="12" transform="rotate(-45 22 80)"/>
+    <ellipse cx="24" cy="60" rx="5" ry="11" transform="rotate(-60 24 60)"/>
+    <ellipse cx="32" cy="44" rx="5" ry="10" transform="rotate(-70 32 44)"/>
+  </g>
+  <!-- Laurel right -->
+  <g fill="#C9A84C">
+    <ellipse cx="172" cy="100" rx="7" ry="14" transform="rotate(30 172 100)"/>
+    <ellipse cx="178" cy="80" rx="6" ry="12" transform="rotate(45 178 80)"/>
+    <ellipse cx="176" cy="60" rx="5" ry="11" transform="rotate(60 176 60)"/>
+    <ellipse cx="168" cy="44" rx="5" ry="10" transform="rotate(70 168 44)"/>
+  </g>
+  <!-- Ground swoosh -->
+  <path d="M55 130 Q100 118 145 130" stroke="#C9A84C" stroke-width="3" fill="none"/>
+  <!-- Flag pole -->
+  <line x1="100" y1="55" x2="100" y2="125" stroke="#C9A84C" stroke-width="2.5"/>
+  <!-- Flag -->
+  <path d="M100 55 L120 63 L100 71 Z" fill="#C9A84C"/>
+  <!-- Golf ball -->
+  <circle cx="100" cy="90" r="16" fill="white" stroke="#C9A84C" stroke-width="1.5"/>
+  <circle cx="95" cy="86" r="1.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="101" cy="84" r="1.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="107" cy="88" r="1.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="93" cy="93" r="1.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="100" cy="96" r="1.5" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="106" cy="94" r="1.5" fill="#C9A84C" opacity="0.5"/>
+  <!-- Wings left -->
+  <path d="M84 90 Q70 75 55 78 Q65 88 80 92 Z" fill="#C9A84C" opacity="0.9"/>
+  <path d="M84 90 Q68 80 58 85 Q70 93 82 95 Z" fill="#C9A84C"/>
+  <!-- Wings right -->
+  <path d="M116 90 Q130 75 145 78 Q135 88 120 92 Z" fill="#C9A84C" opacity="0.9"/>
+  <path d="M116 90 Q132 80 142 85 Q130 93 118 95 Z" fill="#C9A84C"/>
+</svg>
