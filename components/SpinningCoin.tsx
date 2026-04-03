@@ -10,28 +10,28 @@ interface SpinningCoinProps {
 export default function SpinningCoin({ backImageUrl, size = 140 }: SpinningCoinProps) {
   return (
     <div
-      className="spinning-coin-wrapper mx-auto"
-      style={{ width: size, height: size, perspective: 800 }}
+      className="mx-auto relative"
+      style={{ width: size, height: size, perspective: '800px' }}
     >
-      <div className="spinning-coin" style={{ width: size, height: size }}>
+      <div
+        className="coin-spinner relative w-full h-full"
+      >
         {/* Front: Lorgen logo */}
         <div
-          className="coin-face coin-front rounded-full border-2 border-gold/50 bg-white/80 shadow-xl flex items-center justify-center"
-          style={{ width: size, height: size }}
+          className="coin-face coin-front w-full h-full rounded-full border-2 border-gold/50 bg-white/80 shadow-xl flex items-center justify-center"
         >
           <Image
             src="/logo.svg"
             alt="Lorgen Invitational"
-            width={size * 0.78}
-            height={size * 0.78}
+            width={Math.round(size * 0.78)}
+            height={Math.round(size * 0.78)}
             priority
           />
         </div>
 
         {/* Back: custom image or default gold back */}
         <div
-          className="coin-face coin-back rounded-full border-2 border-gold/50 shadow-xl overflow-hidden"
-          style={{ width: size, height: size }}
+          className="coin-face coin-back w-full h-full rounded-full border-2 border-gold/50 shadow-xl overflow-hidden"
         >
           {backImageUrl ? (
             <Image
@@ -55,36 +55,6 @@ export default function SpinningCoin({ backImageUrl, size = 140 }: SpinningCoinP
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        .spinning-coin-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .spinning-coin {
-          position: relative;
-          transform-style: preserve-3d;
-          animation: coinSpin 4s linear infinite;
-        }
-        .coin-face {
-          position: absolute;
-          top: 0;
-          left: 0;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-        }
-        .coin-front {
-          transform: rotateY(0deg);
-        }
-        .coin-back {
-          transform: rotateY(180deg);
-        }
-        @keyframes coinSpin {
-          0%   { transform: rotateY(0deg); }
-          100% { transform: rotateY(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

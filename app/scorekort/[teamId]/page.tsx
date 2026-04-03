@@ -40,9 +40,15 @@ export default async function ScoreEntryPage({
         <span className="badge mb-3">⛳ Scorekort</span>
         <h1 className="font-serif text-2xl font-bold text-navy">{(team as Team).name}</h1>
         <p className="text-gray-500 text-sm mt-1">{(tournament as Tournament).name} — {(tournament as Tournament).format}</p>
-        <Link href="/resultater" className="inline-flex items-center gap-1.5 text-xs text-gold mt-2 hover:underline">
-          📊 Se leaderboard
-        </Link>
+        <div className="flex items-center justify-center gap-4 mt-2">
+          <Link href="/resultater" className="inline-flex items-center gap-1.5 text-xs text-gold hover:underline">
+            📊 Se leaderboard
+          </Link>
+          <span className="text-gray-300">·</span>
+          <Link href="/chat" className="inline-flex items-center gap-1.5 text-xs text-gold hover:underline">
+            💬 Live Chat
+          </Link>
+        </div>
       </div>
 
       <ScoreEntry
