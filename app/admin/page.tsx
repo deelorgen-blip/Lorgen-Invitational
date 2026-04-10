@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-16 h-16 mx-auto rounded-full border border-gold/30 bg-white/60 flex items-center justify-center mb-4 shadow">
-            <Image src="/logo.svg" alt="Lorgen" width={44} height={44} />
+            <Image src="/logo.png" alt="Lorgen" width={44} height={44} />
           </div>
           <h1 className="font-serif text-2xl font-bold text-navy">Administrasjonspanel</h1>
           <p className="text-gray-500 text-sm mt-1">Logg inn for å styre turneringen</p>

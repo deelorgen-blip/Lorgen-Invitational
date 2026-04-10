@@ -1,27 +1,37 @@
-import type { Team, Score, LeaderboardEntry } from '@/types'
+import type { Team, Score, LeaderboardEntry, HoleConfig } from '@/types'
 
-const DEFAULT_PARS = Array(18).fill(4) // par 72
+const DEFAULT_PAR = 4
 
 export function calculateLeaderboard(
   teams: Team[],
   allScores: Score[],
-  holePars: number[] = DEFAULT_PARS
+  holeConfigs: HoleConfig[] = [],
+  handicap_pct: number = 25
 ): LeaderboardEntry[] {
-  const coursePar = holePars.reduce((a, b) => a + b, 0)
+  // Build a map from hole number to config
+  const configMap: Record<number, HoleConfig> = {}
+  holeConfigs.forEach((h) => { configMap[h.hole] = h })
 
   const entries: LeaderboardEntry[] = teams.map((team) => {
     const teamScores = allScores.filter((s) => s.team_id === team.id)
     const grossStrokes = teamScores.reduce((sum, s) => sum + (s.strokes ?? 0), 0)
     const holesPlayed = teamScores.filter((s) => s.strokes !== null).length
 
-    // Handicap allowance: 25% of team handicap strokes across 18 holes
-    const handicapStrokes = Math.round(team.handicap * 0.25)
-    const netStrokes = Math.max(0, grossStrokes - handicapStrokes)
+    // SI-based handicap allowance: floor(team.handicap * handicap_pct / 100)
+    const handicapAllowance = Math.floor(team.handicap * handicap_pct / 100)
 
-    // vs par: only meaningful when all holes played
-    const parForHolesPlayed = holePars
-      .slice(0, holesPlayed)
-      .reduce((a, b) => a + b, 0)
+    // Per-hole net calculation: −1 stroke on holes where stroke_index ≤ allowance
+    let netStrokes = 0
+    let parForHolesPlayed = 0
+    teamScores.forEach((score) => {
+      if (score.strokes === null) return
+      const config = configMap[score.hole]
+      const si = config?.stroke_index ?? 99 // no SI = no handicap stroke
+      const handicapStroke = (handicapAllowance > 0 && si <= handicapAllowance) ? 1 : 0
+      netStrokes += Math.max(1, score.strokes - handicapStroke)
+      parForHolesPlayed += config?.par ?? DEFAULT_PAR
+    })
+
     const vsPar = holesPlayed > 0 ? netStrokes - parForHolesPlayed : 0
 
     return {
@@ -59,6 +69,6 @@ export function formatVsPar(vsPar: number): string {
   return vsPar > 0 ? `+${vsPar}` : `${vsPar}`
 }
 
-export function coursePar(holePars: number[]): number {
-  return holePars.reduce((a, b) => a + b, 0)
+export function coursePar(holeConfigs: HoleConfig[]): number {
+  return holeConfigs.reduce((sum, h) => sum + h.par, 0)
 }

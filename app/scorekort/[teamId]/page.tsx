@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
-import type { Team, Tournament, Score } from '@/types'
+import type { Team, Tournament, Score, HoleConfig } from '@/types'
 import ScoreEntry from '@/components/ScoreEntry'
 import Link from 'next/link'
 
@@ -28,10 +28,12 @@ export default async function ScoreEntryPage({
     redirect('/scorekort')
   }
 
-  const { data: scores } = await supabase
-    .from('scores')
-    .select('*')
-    .eq('team_id', params.teamId)
+  const t = tournament as Tournament
+
+  const [{ data: scores }, { data: holeConfigs }] = await Promise.all([
+    supabase.from('scores').select('*').eq('team_id', params.teamId),
+    supabase.from('hole_configs').select('*').eq('tournament_id', t.id).order('hole'),
+  ])
 
   return (
     <div className="min-h-screen bg-cream pb-10">
@@ -39,7 +41,7 @@ export default async function ScoreEntryPage({
       <div className="bg-cream-gradient border-b border-gold/10 py-6 px-4 text-center">
         <span className="badge mb-3">⛳ Scorekort</span>
         <h1 className="font-serif text-2xl font-bold text-navy">{(team as Team).name}</h1>
-        <p className="text-gray-500 text-sm mt-1">{(tournament as Tournament).name} — {(tournament as Tournament).format}</p>
+        <p className="text-gray-500 text-sm mt-1">{t.name} — {t.format}</p>
         <div className="flex items-center justify-center gap-4 mt-2">
           <Link href="/resultater" className="inline-flex items-center gap-1.5 text-xs text-gold hover:underline">
             📊 Se leaderboard
@@ -53,8 +55,9 @@ export default async function ScoreEntryPage({
 
       <ScoreEntry
         team={team as Team}
-        tournament={tournament as Tournament}
+        tournament={t}
         initialScores={(scores ?? []) as Score[]}
+        holeConfigs={(holeConfigs ?? []) as HoleConfig[]}
       />
     </div>
   )

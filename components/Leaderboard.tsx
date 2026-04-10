@@ -3,13 +3,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { calculateLeaderboard, formatVsPar, scoreLabel } from '@/lib/scoring'
-import type { Team, Score, LeaderboardEntry, Tournament } from '@/types'
+import type { Team, Score, LeaderboardEntry, Tournament, HoleConfig } from '@/types'
 import { RefreshCw } from 'lucide-react'
 
 interface Props {
   tournament: Tournament
   initialTeams: Team[]
   initialScores: Score[]
+  holeConfigs: HoleConfig[]
 }
 
 function ScoreCell({ strokes, par }: { strokes: number | null; par: number }) {
@@ -26,12 +27,16 @@ function ScoreCell({ strokes, par }: { strokes: number | null; par: number }) {
   return <span className={classes}>{display}</span>
 }
 
-export default function Leaderboard({ tournament, initialTeams, initialScores }: Props) {
+export default function Leaderboard({ tournament, initialTeams, initialScores, holeConfigs }: Props) {
   const [teams] = useState<Team[]>(initialTeams)
   const [scores, setScores] = useState<Score[]>(initialScores)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
-  const holePars: number[] = tournament.hole_pars ?? Array(18).fill(4)
+  // Build par array from holeConfigs for display (fallback to par 4)
+  const holePars = Array.from({ length: 18 }, (_, i) => {
+    const cfg = holeConfigs.find((h) => h.hole === i + 1)
+    return cfg?.par ?? 4
+  })
 
   const refreshScores = useCallback(async () => {
     const { data } = await supabase
@@ -58,7 +63,7 @@ export default function Leaderboard({ tournament, initialTeams, initialScores }:
     return () => { supabase.removeChannel(channel) }
   }, [refreshScores])
 
-  const entries = calculateLeaderboard(teams, scores, holePars)
+  const entries = calculateLeaderboard(teams, scores, holeConfigs, tournament.handicap_pct)
 
   return (
     <div className="space-y-8">
@@ -82,7 +87,7 @@ export default function Leaderboard({ tournament, initialTeams, initialScores }:
           <table className="w-full text-sm">
             <thead>
               <tr>
-                {['POS', 'LAG', 'TOTALT', '+/-', 'SLAG', 'HULL'].map((h) => (
+                {['POS', 'LAG', 'NETTO', '+/-', 'BRUTTO', 'HULL'].map((h) => (
                   <th key={h} className="table-header text-left first:pl-4 last:pr-4">
                     {h}
                   </th>

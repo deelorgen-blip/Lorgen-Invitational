@@ -1,7 +1,6 @@
--- Lorgen Invitational — Database Schema
--- Run this in the Supabase SQL editor
+-- Lorgen Invitational — Full Schema (v2)
+-- Run this in the Supabase SQL editor (fresh install)
 
--- Enable UUID extension
 create extension if not exists "pgcrypto";
 
 -- ============================================================
@@ -16,9 +15,23 @@ create table if not exists tournaments (
   holes int default 18,
   status text default 'upcoming' check (status in ('upcoming','active','completed')),
   handicap_pct int default 25,
-  hole_pars jsonb default '[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]'::jsonb,
   coin_back_image_url text,
   created_at timestamptz default now()
+);
+
+-- ============================================================
+-- HOLE CONFIGS (par, SI, special flags per hole)
+-- ============================================================
+create table if not exists hole_configs (
+  id uuid primary key default gen_random_uuid(),
+  tournament_id uuid references tournaments(id) on delete cascade,
+  hole int not null check (hole >= 1 and hole <= 18),
+  par int default 4 check (par >= 3 and par <= 5),
+  stroke_index int check (stroke_index >= 1 and stroke_index <= 18),
+  requires_photo boolean default false,
+  is_longest_drive boolean default false,
+  is_nearest_flag boolean default false,
+  unique(tournament_id, hole)
 );
 
 -- ============================================================
@@ -36,7 +49,7 @@ create table if not exists teams (
 );
 
 -- ============================================================
--- SCORES (per-hole)
+-- SCORES
 -- ============================================================
 create table if not exists scores (
   id uuid primary key default gen_random_uuid(),
@@ -116,11 +129,10 @@ create table if not exists chat_messages (
 );
 
 -- ============================================================
--- ROW LEVEL SECURITY
+-- RLS
 -- ============================================================
-
--- Enable RLS on all tables
 alter table tournaments enable row level security;
+alter table hole_configs enable row level security;
 alter table teams enable row level security;
 alter table scores enable row level security;
 alter table special_awards enable row level security;
@@ -129,53 +141,28 @@ alter table sponsors enable row level security;
 alter table hall_of_fame enable row level security;
 alter table chat_messages enable row level security;
 
--- Public read access for most tables
-create policy "Public read tournaments" on tournaments for select using (true);
-create policy "Public read teams" on teams for select using (true);
-create policy "Public read scores" on scores for select using (true);
+create policy "Public read tournaments"    on tournaments    for select using (true);
+create policy "Public read hole_configs"   on hole_configs   for select using (true);
+create policy "Public read teams"          on teams          for select using (true);
+create policy "Public read scores"         on scores         for select using (true);
 create policy "Public read special_awards" on special_awards for select using (true);
-create policy "Public read photos" on photos for select using (true);
-create policy "Public read sponsors" on sponsors for select using (visible = true);
-create policy "Public read hall_of_fame" on hall_of_fame for select using (true);
-create policy "Public read chat_messages" on chat_messages for select using (true);
+create policy "Public read photos"         on photos         for select using (true);
+create policy "Public read sponsors"       on sponsors       for select using (visible = true);
+create policy "Public read hall_of_fame"   on hall_of_fame   for select using (true);
+create policy "Public read chat_messages"  on chat_messages  for select using (true);
 
--- Insert/update access (teams/players can submit scores, photos, chat)
-create policy "Anyone can insert scores" on scores for insert with check (true);
-create policy "Anyone can update scores" on scores for update using (true);
-create policy "Anyone can insert photos" on photos for insert with check (true);
-create policy "Anyone can update photo votes" on photos for update using (true);
-create policy "Anyone can insert chat" on chat_messages for insert with check (true);
+create policy "Anyone can insert scores"         on scores         for insert with check (true);
+create policy "Anyone can update scores"         on scores         for update using (true);
+create policy "Anyone can insert photos"         on photos         for insert with check (true);
+create policy "Anyone can update photo votes"    on photos         for update using (true);
+create policy "Anyone can insert chat"           on chat_messages  for insert with check (true);
 create policy "Anyone can insert special awards" on special_awards for insert with check (true);
 create policy "Anyone can update special awards" on special_awards for update using (true);
-
--- Service role has full access (admin operations)
--- This is handled automatically by the service role key
 
 -- ============================================================
 -- REALTIME
 -- ============================================================
--- Enable realtime for live updates
 alter publication supabase_realtime add table scores;
 alter publication supabase_realtime add table chat_messages;
 alter publication supabase_realtime add table photos;
 alter publication supabase_realtime add table special_awards;
-
--- ============================================================
--- STORAGE BUCKET
--- ============================================================
--- Run this separately in Supabase dashboard or via API:
--- Create a public bucket called 'tournament-photos'
-
--- ============================================================
--- SEED DATA (optional — remove before production)
--- ============================================================
-insert into tournaments (name, date, course, format, holes, status, handicap_pct)
-values (
-  'Lorgen Invitational',
-  '2026-04-02 15:11:00+02',
-  'Banen',
-  '2-Mann Scramble',
-  18,
-  'active',
-  25
-) on conflict do nothing;

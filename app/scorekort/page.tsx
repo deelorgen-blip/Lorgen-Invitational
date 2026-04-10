@@ -62,7 +62,7 @@ export default function ScorekortLoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto rounded-full border border-gold/30 bg-white/60 flex items-center justify-center mb-4 shadow">
-            <Image src="/logo.svg" alt="Lorgen" width={56} height={56} />
+            <Image src="/logo.png" alt="Lorgen" width={56} height={56} />
           </div>
           <h1 className="font-serif text-2xl font-bold text-navy">Scorekort</h1>
           <p className="text-gray-500 text-sm mt-1">Tast inn lagets 4-sifrede PIN</p>

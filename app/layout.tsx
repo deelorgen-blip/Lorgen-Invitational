@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 export const metadata: Metadata = {
   title: 'Lorgen Invitational',
   description: 'Power · Precision · Party — Lorgen Invitational Golf Tournament',
-  icons: { icon: '/logo.svg' },
+  icons: { icon: '/logo.png' },
 }
 
 export default function RootLayout({

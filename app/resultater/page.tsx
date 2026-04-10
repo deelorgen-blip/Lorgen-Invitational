@@ -1,5 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase-server'
-import type { Tournament, Team, Score, SpecialAward } from '@/types'
+import type { Tournament, Team, Score, SpecialAward, HoleConfig } from '@/types'
 import Leaderboard from '@/components/Leaderboard'
 import SpecialAwards from '@/components/SpecialAwards'
 
@@ -30,13 +30,13 @@ export default async function ResultaterPage() {
 
   const t = tournament as Tournament
 
-  const [{ data: teams }, { data: scores }, { data: awards }] = await Promise.all([
+  const teamIds = (await supabase.from('teams').select('id').eq('tournament_id', t.id)).data?.map((x) => x.id) ?? []
+
+  const [{ data: teams }, { data: scores }, { data: awards }, { data: holeConfigs }] = await Promise.all([
     supabase.from('teams').select('*').eq('tournament_id', t.id),
-    supabase.from('scores').select('*').in(
-      'team_id',
-      (await supabase.from('teams').select('id').eq('tournament_id', t.id)).data?.map((x) => x.id) ?? []
-    ),
+    supabase.from('scores').select('*').in('team_id', teamIds),
     supabase.from('special_awards').select('*, teams(name, player1, player2)').eq('tournament_id', t.id),
+    supabase.from('hole_configs').select('*').eq('tournament_id', t.id).order('hole'),
   ])
 
   return (
@@ -51,14 +51,13 @@ export default async function ResultaterPage() {
       </section>
 
       <div className="max-w-5xl mx-auto px-4 py-10 space-y-10">
-        {/* Leaderboard (realtime client component) */}
         <Leaderboard
           tournament={t}
           initialTeams={(teams ?? []) as Team[]}
           initialScores={(scores ?? []) as Score[]}
+          holeConfigs={(holeConfigs ?? []) as HoleConfig[]}
         />
 
-        {/* Special awards */}
         <SpecialAwards
           tournamentId={t.id}
           initialAwards={(awards ?? []) as SpecialAward[]}

@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { Team, Score, Tournament, SpecialAward } from '@/types'
+import type { Team, Score, Tournament, HoleConfig } from '@/types'
 import { scoreLabel } from '@/lib/scoring'
-import { CheckCircle, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
+import { CheckCircle, ChevronLeft, ChevronRight, Upload, AlertCircle } from 'lucide-react'
 
 interface Props {
   team: Team
   tournament: Tournament
   initialScores: Score[]
+  holeConfigs: HoleConfig[]
 }
 
 const SCORE_COLORS: Record<string, string> = {
@@ -20,8 +21,7 @@ const SCORE_COLORS: Record<string, string> = {
   double: 'bg-gray-300 text-gray-700',
 }
 
-export default function ScoreEntry({ team, tournament, initialScores }: Props) {
-  const holePars: number[] = tournament.hole_pars ?? Array(18).fill(4)
+export default function ScoreEntry({ team, tournament, initialScores, holeConfigs }: Props) {
   const [scores, setScores] = useState<Record<number, number>>(() => {
     const map: Record<number, number> = {}
     initialScores.forEach((s) => { if (s.strokes) map[s.hole] = s.strokes })
@@ -33,9 +33,18 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
   const [awardType, setAwardType] = useState<'longest_drive' | 'closest_to_pin' | null>(null)
   const [awardValue, setAwardValue] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [photoUploaded, setPhotoUploaded] = useState<Record<number, boolean>>({})
 
-  const par = holePars[currentHole - 1]
+  // Get config for current hole
+  const currentConfig = holeConfigs.find((h) => h.hole === currentHole)
+  const par = currentConfig?.par ?? 4
+  const requiresPhoto = currentConfig?.requires_photo ?? false
+  const isLongestDrive = currentConfig?.is_longest_drive ?? false
+  const isNearestFlag = currentConfig?.is_nearest_flag ?? false
   const currentStrokes = scores[currentHole]
+
+  // Check if photo requirement is satisfied
+  const photoSatisfied = !requiresPhoto || photoUploaded[currentHole]
 
   async function saveScore(hole: number, strokes: number) {
     setSaving(true)
@@ -50,6 +59,7 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
   }
 
   function selectStrokes(s: number) {
+    if (!photoSatisfied) return // block if photo required
     setScores((prev) => ({ ...prev, [currentHole]: s }))
     saveScore(currentHole, s)
   }
@@ -85,6 +95,7 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
         storage_path: publicUrl,
         hole: currentHole,
       })
+      setPhotoUploaded((prev) => ({ ...prev, [currentHole]: true }))
     }
     setUploading(false)
   }
@@ -125,7 +136,7 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
       {/* Current hole */}
       <div className="bg-white rounded-2xl border border-gold/20 p-6 shadow-sm">
         {/* Hole navigation */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => setCurrentHole(Math.max(1, currentHole - 1))}
             disabled={currentHole === 1}
@@ -137,6 +148,27 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
             <p className="text-xs uppercase tracking-widest text-gray-400">Hull</p>
             <p className="font-serif text-4xl font-bold text-navy">{currentHole}</p>
             <p className="text-gold text-sm font-medium">Par {par}</p>
+            {/* Special hole indicators */}
+            <div className="flex items-center justify-center gap-2 mt-1">
+              {currentConfig?.stroke_index && (
+                <span className="text-xs text-gray-400">SI {currentConfig.stroke_index}</span>
+              )}
+              {requiresPhoto && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                  📸 Foto
+                </span>
+              )}
+              {isLongestDrive && (
+                <span className="text-xs bg-gold/20 text-gold-dark px-1.5 py-0.5 rounded-full font-medium">
+                  🏌️ LD
+                </span>
+              )}
+              {isNearestFlag && (
+                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                  🎯 NF
+                </span>
+              )}
+            </div>
           </div>
           <button
             onClick={() => setCurrentHole(Math.min(18, currentHole + 1))}
@@ -147,11 +179,21 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
           </button>
         </div>
 
+        {/* Photo required notice */}
+        {requiresPhoto && !photoUploaded[currentHole] && (
+          <div className="mb-4 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+            <AlertCircle size={16} className="text-blue-500 flex-shrink-0" />
+            <p className="text-xs text-blue-700 font-medium">
+              Last opp bilde for dette hullet før du registrerer slag.
+            </p>
+          </div>
+        )}
+
         {/* Stroke selector */}
         <p className="text-center text-xs uppercase tracking-widest text-gray-400 mb-3">
           Antall slag
         </p>
-        <div className="grid grid-cols-5 gap-2 mb-4">
+        <div className={`grid grid-cols-5 gap-2 mb-4 ${!photoSatisfied ? 'opacity-40 pointer-events-none' : ''}`}>
           {Array.from({ length: 9 }, (_, i) => i + 1).map((s) => {
             const label = scoreLabel(s, par)
             const isSelected = currentStrokes === s
@@ -159,6 +201,7 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
               <button
                 key={s}
                 onClick={() => selectStrokes(s)}
+                disabled={!photoSatisfied}
                 className={`h-12 rounded-xl font-bold text-lg transition-all border-2 ${
                   isSelected
                     ? `${SCORE_COLORS[label]} border-transparent scale-105 shadow`
@@ -191,50 +234,63 @@ export default function ScoreEntry({ team, tournament, initialScores }: Props) {
         )}
       </div>
 
-      {/* Special awards */}
-      <div className="bg-white rounded-2xl border border-gold/15 p-5 shadow-sm">
-        <p className="font-serif font-semibold text-navy mb-3">Spesielle utmerkelser</p>
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setAwardType(awardType === 'longest_drive' ? null : 'longest_drive')}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-              awardType === 'longest_drive'
-                ? 'bg-gold text-navy border-gold'
-                : 'border-gold/30 text-gold hover:bg-gold/10'
-            }`}
-          >
-            🏌️ Longest Drive
-          </button>
-          <button
-            onClick={() => setAwardType(awardType === 'closest_to_pin' ? null : 'closest_to_pin')}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-              awardType === 'closest_to_pin'
-                ? 'bg-gold text-navy border-gold'
-                : 'border-gold/30 text-gold hover:bg-gold/10'
-            }`}
-          >
-            🎯 Closest to Pin
-          </button>
-        </div>
-        {awardType && (
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={awardValue}
-              onChange={(e) => setAwardValue(e.target.value)}
-              placeholder={awardType === 'longest_drive' ? 'f.eks. 245 meter' : 'f.eks. 1.2 meter'}
-              className="flex-1 border border-gold/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold"
-            />
-            <button onClick={submitSpecialAward} className="btn-gold px-4 py-2 text-xs rounded-lg">
-              Send
-            </button>
+      {/* Special awards — only show on relevant holes */}
+      {(isLongestDrive || isNearestFlag) && (
+        <div className="bg-white rounded-2xl border border-gold/15 p-5 shadow-sm">
+          <p className="font-serif font-semibold text-navy mb-3">Spesielle utmerkelser</p>
+          <div className="flex gap-2 mb-3">
+            {isLongestDrive && (
+              <button
+                onClick={() => setAwardType(awardType === 'longest_drive' ? null : 'longest_drive')}
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                  awardType === 'longest_drive'
+                    ? 'bg-gold text-navy border-gold'
+                    : 'border-gold/30 text-gold hover:bg-gold/10'
+                }`}
+              >
+                🏌️ Longest Drive
+              </button>
+            )}
+            {isNearestFlag && (
+              <button
+                onClick={() => setAwardType(awardType === 'closest_to_pin' ? null : 'closest_to_pin')}
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                  awardType === 'closest_to_pin'
+                    ? 'bg-gold text-navy border-gold'
+                    : 'border-gold/30 text-gold hover:bg-gold/10'
+                }`}
+              >
+                🎯 Closest to Pin
+              </button>
+            )}
           </div>
-        )}
-      </div>
+          {awardType && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={awardValue}
+                onChange={(e) => setAwardValue(e.target.value)}
+                placeholder={awardType === 'longest_drive' ? 'f.eks. 245 meter' : 'f.eks. 1.2 meter'}
+                className="flex-1 border border-gold/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold"
+              />
+              <button onClick={submitSpecialAward} className="btn-gold px-4 py-2 text-xs rounded-lg">
+                Send
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Photo upload */}
       <div className="bg-white rounded-2xl border border-gold/15 p-5 shadow-sm">
-        <p className="font-serif font-semibold text-navy mb-3">📸 Glimtskudd fra hull {currentHole}</p>
+        <p className="font-serif font-semibold text-navy mb-3">
+          📸 {requiresPhoto ? <span className="text-blue-600">Obligatorisk bilde — Hull {currentHole}</span> : `Glimtskudd fra hull ${currentHole}`}
+        </p>
+        {photoUploaded[currentHole] && (
+          <p className="text-xs text-green-600 flex items-center gap-1 mb-2">
+            <CheckCircle size={12} /> Bilde lastet opp!
+          </p>
+        )}
         <label className="flex flex-col items-center gap-2 cursor-pointer border-2 border-dashed border-gold/30 rounded-xl p-6 hover:border-gold hover:bg-gold/5 transition-colors">
           <Upload size={24} className="text-gold" />
           <span className="text-sm text-gray-500">

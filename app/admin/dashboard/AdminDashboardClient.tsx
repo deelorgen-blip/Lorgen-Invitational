@@ -3,14 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import type { Tournament, Team, Sponsor, HallOfFameEntry } from '@/types'
+import type { Tournament, Team, Sponsor, HallOfFameEntry, HoleConfig } from '@/types'
 import TournamentForm from '@/components/admin/TournamentForm'
 import TeamManager from '@/components/admin/TeamManager'
 import SponsorManager from '@/components/admin/SponsorManager'
 import HallOfFameManager from '@/components/admin/HallOfFameManager'
-import { LogOut, Trophy, Users, Building2, Star, Settings } from 'lucide-react'
+import CourseManager from '@/components/admin/CourseManager'
+import { LogOut, Trophy, Users, Building2, Star, Settings, Map } from 'lucide-react'
 
-type Tab = 'turnering' | 'lag' | 'sponsorer' | 'hof' | 'innstillinger'
+type Tab = 'turnering' | 'bane' | 'lag' | 'sponsorer' | 'hof' | 'innstillinger'
 
 interface Props {
   initialTournament: Tournament | null
@@ -18,10 +19,12 @@ interface Props {
   initialTeams: Team[]
   initialSponsors: Sponsor[]
   initialHof: HallOfFameEntry[]
+  initialHoleConfigs: HoleConfig[]
 }
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'turnering', label: 'Turnering', icon: <Trophy size={16} /> },
+  { id: 'bane', label: 'Bane', icon: <Map size={16} /> },
   { id: 'lag', label: 'Lag', icon: <Users size={16} /> },
   { id: 'sponsorer', label: 'Sponsorer', icon: <Building2 size={16} /> },
   { id: 'hof', label: 'Hall of Fame', icon: <Star size={16} /> },
@@ -34,6 +37,7 @@ export default function AdminDashboardClient({
   initialTeams,
   initialSponsors,
   initialHof,
+  initialHoleConfigs,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('turnering')
   const [tournament, setTournament] = useState<Tournament | null>(initialTournament)
@@ -53,7 +57,7 @@ export default function AdminDashboardClient({
       <div className="bg-navy px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full border border-gold/30 overflow-hidden">
-            <Image src="/logo.svg" alt="Lorgen" width={32} height={32} />
+            <Image src="/logo.png" alt="Lorgen" width={32} height={32} />
           </div>
           <div>
             <p className="text-white font-semibold text-sm">Administrasjonspanel</p>
@@ -111,6 +115,14 @@ export default function AdminDashboardClient({
                 {tournament ? 'Rediger turnering' : 'Opprett turnering'}
               </h2>
               <TournamentForm tournament={tournament} onSaved={setTournament} />
+            </div>
+          )}
+
+          {activeTab === 'bane' && (
+            <div>
+              <h2 className="font-serif text-xl font-bold text-navy mb-2">Baneoppsett</h2>
+              <p className="text-sm text-gray-400 mb-5">{tournament?.course ?? 'Banen ikke satt'}</p>
+              <CourseManager tournament={tournament} initialConfigs={initialHoleConfigs} />
             </div>
           )}
 

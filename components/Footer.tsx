@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Logo + tagline */}
           <div className="col-span-2 md:col-span-1">
             <div className="w-10 h-10 rounded-full border border-gold/40 overflow-hidden bg-navy-light mb-3">
-              <Image src="/logo.svg" alt="Lorgen" width={40} height={40} />
+              <Image src="/logo.png" alt="Lorgen" width={40} height={40} />
             </div>
             <p className="text-xs tracking-widest text-gold/60 uppercase font-medium">
               Power · Precision · Party
@@ -53,11 +53,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/chat" className="text-sm hover:text-gold transition-colors">
-                  Live Chat
-                </Link>
-              </li>
-              <li>
                 <Link href="/admin" className="text-sm hover:text-gold transition-colors">
                   Administrasjonspanel
                 </Link>
@@ -94,10 +89,6 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
-            {/* Logo image in footer */}
-            <div className="mt-4 w-16 h-16 bg-white rounded-lg overflow-hidden flex items-center justify-center p-1 border border-gold/20">
-              <Image src="/logo.svg" alt="Lorgen Invitational" width={56} height={56} />
-            </div>
           </div>
         </div>
       </div>

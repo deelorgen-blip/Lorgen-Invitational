@@ -7,9 +7,19 @@ export interface Tournament {
   holes: number
   status: 'upcoming' | 'active' | 'completed'
   handicap_pct: number
-  hole_pars: number[]
   coin_back_image_url: string | null
   created_at: string
+}
+
+export interface HoleConfig {
+  id: string
+  tournament_id: string
+  hole: number
+  par: number
+  stroke_index: number | null
+  requires_photo: boolean
+  is_longest_drive: boolean
+  is_nearest_flag: boolean
 }
 
 export interface Team {

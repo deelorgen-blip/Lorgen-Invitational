@@ -21,7 +21,7 @@ export default function SpinningCoin({ backImageUrl, size = 140 }: SpinningCoinP
           className="coin-face coin-front w-full h-full rounded-full border-2 border-gold/50 bg-white/80 shadow-xl flex items-center justify-center"
         >
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             alt="Lorgen Invitational"
             width={Math.round(size * 0.78)}
             height={Math.round(size * 0.78)}

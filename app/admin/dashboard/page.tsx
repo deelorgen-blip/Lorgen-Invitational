@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
-import type { Tournament, Team, Sponsor, HallOfFameEntry } from '@/types'
+import type { Tournament, Team, Sponsor, HallOfFameEntry, HoleConfig } from '@/types'
 import AdminDashboardClient from './AdminDashboardClient'
 
 export default async function AdminDashboardPage() {
@@ -27,6 +27,14 @@ export default async function AdminDashboardPage() {
     (t) => t.status === 'active' || t.status === 'upcoming'
   ) ?? null
 
+  const { data: holeConfigs } = activeTournament
+    ? await supabase
+        .from('hole_configs')
+        .select('*')
+        .eq('tournament_id', activeTournament.id)
+        .order('hole')
+    : { data: [] }
+
   return (
     <AdminDashboardClient
       initialTournament={activeTournament as Tournament | null}
@@ -34,6 +42,7 @@ export default async function AdminDashboardPage() {
       initialTeams={(teams ?? []) as Team[]}
       initialSponsors={(sponsors ?? []) as Sponsor[]}
       initialHof={(hofEntries ?? []) as HallOfFameEntry[]}
+      initialHoleConfigs={(holeConfigs ?? []) as HoleConfig[]}
     />
   )
 }

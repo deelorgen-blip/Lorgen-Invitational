@@ -25,7 +25,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <div className="w-9 h-9 rounded-full border border-gold/40 overflow-hidden bg-navy flex items-center justify-center">
-              <Image src="/logo.svg" alt="Lorgen" width={32} height={32} />
+              <Image src="/logo.png" alt="Lorgen" width={32} height={32} />
             </div>
           </Link>
 
@@ -89,13 +89,6 @@ export default function Navbar() {
                 </Link>
               )
             })}
-            <Link
-              href="/chat"
-              onClick={() => setMobileOpen(false)}
-              className="block px-3 py-2 rounded text-sm font-medium text-gray-300 hover:text-gold hover:bg-gold/10 transition-colors"
-            >
-              Live Chat
-            </Link>
           </div>
         </div>
       )}

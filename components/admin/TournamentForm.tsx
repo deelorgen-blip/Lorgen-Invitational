@@ -19,7 +19,6 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
     holes: tournament?.holes ?? 18,
     status: tournament?.status ?? 'upcoming',
     handicap_pct: tournament?.handicap_pct ?? 25,
-    hole_pars: (tournament?.hole_pars ?? Array(18).fill(4)).join(','),
   })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
@@ -47,7 +46,6 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
     setSaving(true)
     setMsg('')
 
-    const parsedPars = form.hole_pars.split(',').map(Number).filter(Boolean)
     const payload = {
       name: form.name,
       date: form.date ? new Date(form.date).toISOString() : null,
@@ -56,7 +54,6 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
       holes: Number(form.holes),
       status: form.status as Tournament['status'],
       handicap_pct: Number(form.handicap_pct),
-      hole_pars: parsedPars.length === 18 ? parsedPars : Array(18).fill(4),
       coin_back_image_url: coinBackUrl || null,
     }
 
@@ -122,14 +119,6 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
             <option value="active">Aktiv (pågår nå)</option>
             <option value="completed">Avsluttet</option>
           </select>
-        </div>
-        <div className="sm:col-span-2">
-          <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1.5">
-            Par per hull (18 tall separert med komma)
-          </label>
-          <input value={form.hole_pars} onChange={(e) => set('hole_pars', e.target.value)}
-            placeholder="4,4,3,4,5,4,3,4,5,4,4,3,4,5,4,3,4,5"
-            className="w-full border border-gold/20 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-gold" />
         </div>
       </div>
 
