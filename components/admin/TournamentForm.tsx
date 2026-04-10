@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Tournament } from '@/types'
-import { Upload } from 'lucide-react'
 
 interface Props {
   tournament: Tournament | null
@@ -22,24 +21,9 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
   })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
-  const [uploadingCoin, setUploadingCoin] = useState(false)
-  const [coinBackUrl, setCoinBackUrl] = useState(tournament?.coin_back_image_url ?? '')
 
   function set(key: string, val: string | number) {
     setForm((f) => ({ ...f, [key]: val }))
-  }
-
-  async function uploadCoinBack(file: File) {
-    setUploadingCoin(true)
-    const path = `coin-back/${Date.now()}-${file.name}`
-    const { data, error } = await supabase.storage
-      .from('tournament-photos')
-      .upload(path, file, { upsert: true })
-    if (!error && data) {
-      const { data: { publicUrl } } = supabase.storage.from('tournament-photos').getPublicUrl(data.path)
-      setCoinBackUrl(publicUrl)
-    }
-    setUploadingCoin(false)
   }
 
   async function handleSave() {
@@ -54,7 +38,6 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
       holes: Number(form.holes),
       status: form.status as Tournament['status'],
       handicap_pct: Number(form.handicap_pct),
-      coin_back_image_url: coinBackUrl || null,
     }
 
     const { data, error } = tournament
@@ -120,30 +103,6 @@ export default function TournamentForm({ tournament, onSaved }: Props) {
             <option value="completed">Avsluttet</option>
           </select>
         </div>
-      </div>
-
-      {/* Coin back image */}
-      <div className="border border-gold/20 rounded-xl p-4 bg-gold/5">
-        <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
-          🪙 Bilde på baksiden av spinnende mynt
-        </label>
-        {coinBackUrl && (
-          <div className="mb-3 relative w-20 h-20 rounded-full overflow-hidden border-2 border-gold">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coinBackUrl} alt="Coin back" className="w-full h-full object-cover" />
-          </div>
-        )}
-        <label className="cursor-pointer inline-flex items-center gap-2 btn-outline text-xs px-4 py-2 rounded-lg">
-          <Upload size={14} />
-          {uploadingCoin ? 'Laster opp...' : 'Last opp bilde'}
-          <input type="file" accept="image/*" className="hidden" disabled={uploadingCoin}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCoinBack(f) }} />
-        </label>
-        {coinBackUrl && (
-          <button onClick={() => setCoinBackUrl('')} className="ml-2 text-xs text-red-400 hover:text-red-600">
-            Fjern
-          </button>
-        )}
       </div>
 
       {msg && (

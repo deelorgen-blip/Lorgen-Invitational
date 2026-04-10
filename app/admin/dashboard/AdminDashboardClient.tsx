@@ -9,7 +9,8 @@ import TeamManager from '@/components/admin/TeamManager'
 import SponsorManager from '@/components/admin/SponsorManager'
 import HallOfFameManager from '@/components/admin/HallOfFameManager'
 import CourseManager from '@/components/admin/CourseManager'
-import { LogOut, Trophy, Users, Building2, Star, Settings, Map } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { LogOut, Trophy, Users, Building2, Star, Settings, Map, Upload } from 'lucide-react'
 
 type Tab = 'turnering' | 'bane' | 'lag' | 'sponsorer' | 'hof' | 'innstillinger'
 
@@ -44,11 +45,54 @@ export default function AdminDashboardClient({
   const [teams, setTeams] = useState<Team[]>(initialTeams)
   const [sponsors, setSponsors] = useState<Sponsor[]>(initialSponsors)
   const [hof, setHof] = useState<HallOfFameEntry[]>(initialHof)
+  const [coinBackUrl, setCoinBackUrl] = useState(initialTournament?.coin_back_image_url ?? '')
+  const [uploadingCoin, setUploadingCoin] = useState(false)
+  const [coinMsg, setCoinMsg] = useState('')
   const router = useRouter()
 
   async function logout() {
     await fetch('/api/admin/logout', { method: 'POST' })
     router.push('/admin')
+  }
+
+  async function uploadCoinBack(file: File) {
+    if (!tournament) return
+    setUploadingCoin(true)
+    setCoinMsg('')
+    const path = `coin-back/${Date.now()}-${file.name}`
+    const { data, error: uploadError } = await supabase.storage
+      .from('tournament-photos')
+      .upload(path, file, { upsert: true })
+    if (uploadError || !data) {
+      setCoinMsg(`Feil: ${uploadError?.message}`)
+      setUploadingCoin(false)
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('tournament-photos').getPublicUrl(data.path)
+    const { error } = await supabase
+      .from('tournaments')
+      .update({ coin_back_image_url: publicUrl })
+      .eq('id', tournament.id)
+    if (error) {
+      setCoinMsg(`Feil: ${error.message}`)
+    } else {
+      setCoinBackUrl(publicUrl)
+      setTournament((t) => t ? { ...t, coin_back_image_url: publicUrl } : t)
+      setCoinMsg('Bilde lagret ✓')
+    }
+    setUploadingCoin(false)
+  }
+
+  async function removeCoinBack() {
+    if (!tournament) return
+    const { error } = await supabase
+      .from('tournaments')
+      .update({ coin_back_image_url: null })
+      .eq('id', tournament.id)
+    if (!error) {
+      setCoinBackUrl('')
+      setTournament((t) => t ? { ...t, coin_back_image_url: null } : t)
+    }
   }
 
   return (
@@ -155,6 +199,49 @@ export default function AdminDashboardClient({
             <div>
               <h2 className="font-serif text-xl font-bold text-navy mb-5">Innstillinger</h2>
               <div className="space-y-4">
+
+                {/* Coin back image */}
+                <div className="bg-gold/5 border border-gold/15 rounded-xl p-5">
+                  <h3 className="font-semibold text-navy mb-1">🪙 Baksidebilde på spinnende mynt</h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Valgfritt. Uten bilde vises logoen på begge sider av mynten.
+                  </p>
+                  {!tournament ? (
+                    <p className="text-sm text-gray-400">Opprett en turnering først.</p>
+                  ) : (
+                    <div className="flex items-center gap-4 flex-wrap">
+                      {coinBackUrl ? (
+                        <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gold flex-shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={coinBackUrl} alt="Mynt bakside" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-full border-2 border-dashed border-gold/30 flex items-center justify-center flex-shrink-0 bg-white">
+                          <span className="text-2xl">🪙</span>
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-2 btn-outline text-xs px-4 py-2 rounded-lg">
+                          <Upload size={14} />
+                          {uploadingCoin ? 'Laster opp...' : coinBackUrl ? 'Bytt bilde' : 'Last opp bilde'}
+                          <input type="file" accept="image/*" className="hidden" disabled={uploadingCoin}
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCoinBack(f) }} />
+                        </label>
+                        {coinBackUrl && (
+                          <button onClick={removeCoinBack} className="text-xs text-red-400 hover:text-red-600 text-left">
+                            Fjern bilde (bruk standard logo)
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {coinMsg && (
+                    <p className={`text-sm mt-3 font-medium ${coinMsg.startsWith('Feil') ? 'text-red-500' : 'text-green-600'}`}>
+                      {coinMsg}
+                    </p>
+                  )}
+                </div>
+
                 <div className="bg-gold/5 border border-gold/15 rounded-xl p-5">
                   <h3 className="font-semibold text-navy mb-1">Statistikk</h3>
                   <div className="grid grid-cols-3 gap-4 mt-3">
